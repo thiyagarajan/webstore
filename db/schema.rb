@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140214222829) do
+ActiveRecord::Schema.define(version: 20140214233154) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -131,6 +131,36 @@ ActiveRecord::Schema.define(version: 20140214222829) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "spree_drop_ship_line_items", force: true do |t|
+    t.integer  "drop_ship_order_id"
+    t.integer  "line_item_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "spree_drop_ship_line_items", ["drop_ship_order_id"], name: "index_spree_drop_ship_line_items_on_drop_ship_order_id", using: :btree
+  add_index "spree_drop_ship_line_items", ["line_item_id"], name: "index_spree_drop_ship_line_items_on_line_item_id", using: :btree
+
+  create_table "spree_drop_ship_orders", force: true do |t|
+    t.integer  "order_id"
+    t.integer  "supplier_id"
+    t.float    "total"
+    t.decimal  "commission",   precision: 8, scale: 2, default: 0.0,      null: false
+    t.text     "notes"
+    t.datetime "sent_at"
+    t.datetime "confirmed_at"
+    t.datetime "completed_at"
+    t.string   "state",                                default: "active"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "spree_drop_ship_orders", ["completed_at"], name: "index_spree_drop_ship_orders_on_completed_at", using: :btree
+  add_index "spree_drop_ship_orders", ["confirmed_at"], name: "index_spree_drop_ship_orders_on_confirmed_at", using: :btree
+  add_index "spree_drop_ship_orders", ["order_id"], name: "index_spree_drop_ship_orders_on_order_id", using: :btree
+  add_index "spree_drop_ship_orders", ["sent_at"], name: "index_spree_drop_ship_orders_on_sent_at", using: :btree
+  add_index "spree_drop_ship_orders", ["supplier_id"], name: "index_spree_drop_ship_orders_on_supplier_id", using: :btree
 
   create_table "spree_gateways", force: true do |t|
     t.string   "type"
@@ -268,8 +298,10 @@ ActiveRecord::Schema.define(version: 20140214222829) do
     t.string   "identifier"
     t.string   "cvv_response_code"
     t.string   "cvv_response_message"
+    t.integer  "drop_ship_order_id"
   end
 
+  add_index "spree_payments", ["drop_ship_order_id"], name: "index_spree_payments_on_drop_ship_order_id", using: :btree
   add_index "spree_payments", ["order_id"], name: "index_spree_payments_on_order_id", using: :btree
 
   create_table "spree_preferences", force: true do |t|
@@ -322,6 +354,7 @@ ActiveRecord::Schema.define(version: 20140214222829) do
     t.integer  "shipping_category_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "supplier_id"
   end
 
   add_index "spree_products", ["available_on"], name: "index_spree_products_on_available_on", using: :btree
@@ -329,6 +362,7 @@ ActiveRecord::Schema.define(version: 20140214222829) do
   add_index "spree_products", ["name"], name: "index_spree_products_on_name", using: :btree
   add_index "spree_products", ["permalink"], name: "index_spree_products_on_permalink", using: :btree
   add_index "spree_products", ["permalink"], name: "permalink_idx_unique", unique: true, using: :btree
+  add_index "spree_products", ["supplier_id"], name: "index_spree_products_on_supplier_id", using: :btree
 
   create_table "spree_products_promotion_rules", id: false, force: true do |t|
     t.integer "product_id"
@@ -524,7 +558,10 @@ ActiveRecord::Schema.define(version: 20140214222829) do
     t.boolean  "backorderable_default",  default: false
     t.boolean  "propagate_all_variants", default: true
     t.string   "admin_name"
+    t.integer  "supplier_id"
   end
+
+  add_index "spree_stock_locations", ["supplier_id"], name: "index_spree_stock_locations_on_supplier_id", using: :btree
 
   create_table "spree_stock_movements", force: true do |t|
     t.integer  "stock_item_id"
@@ -551,6 +588,28 @@ ActiveRecord::Schema.define(version: 20140214222829) do
   add_index "spree_stock_transfers", ["destination_location_id"], name: "index_spree_stock_transfers_on_destination_location_id", using: :btree
   add_index "spree_stock_transfers", ["number"], name: "index_spree_stock_transfers_on_number", using: :btree
   add_index "spree_stock_transfers", ["source_location_id"], name: "index_spree_stock_transfers_on_source_location_id", using: :btree
+
+  create_table "spree_suppliers", force: true do |t|
+    t.boolean  "active",                                        default: false, null: false
+    t.integer  "address_id"
+    t.decimal  "commission_flat_rate",  precision: 8, scale: 2, default: 0.0,   null: false
+    t.float    "commission_percentage",                         default: 0.0,   null: false
+    t.string   "email"
+    t.string   "name"
+    t.string   "url"
+    t.datetime "deleted_at"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "tax_id"
+    t.string   "token"
+    t.string   "slug"
+  end
+
+  add_index "spree_suppliers", ["active"], name: "index_spree_suppliers_on_active", using: :btree
+  add_index "spree_suppliers", ["address_id"], name: "index_spree_suppliers_on_address_id", using: :btree
+  add_index "spree_suppliers", ["deleted_at"], name: "index_spree_suppliers_on_deleted_at", using: :btree
+  add_index "spree_suppliers", ["slug"], name: "index_spree_suppliers_on_slug", unique: true, using: :btree
+  add_index "spree_suppliers", ["token"], name: "index_spree_suppliers_on_token", using: :btree
 
   create_table "spree_tax_categories", force: true do |t|
     t.string   "name"
@@ -649,10 +708,12 @@ ActiveRecord::Schema.define(version: 20140214222829) do
     t.datetime "updated_at"
     t.string   "spree_api_key",          limit: 48
     t.datetime "remember_created_at"
+    t.integer  "supplier_id"
   end
 
   add_index "spree_users", ["email"], name: "email_idx_unique", unique: true, using: :btree
   add_index "spree_users", ["spree_api_key"], name: "index_spree_users_on_spree_api_key", using: :btree
+  add_index "spree_users", ["supplier_id"], name: "index_spree_users_on_supplier_id", using: :btree
 
   create_table "spree_variants", force: true do |t|
     t.string   "sku",                                     default: "",    null: false

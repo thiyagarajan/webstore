@@ -47,3 +47,4 @@ end
 gem 'spree', github: 'spree/spree', branch: '2-1-stable'
 gem 'spree_auth_devise', github: 'spree/spree_auth_devise', branch: '2-1-stable'
 gem 'spree_bootstrap_frontend', github: '200Creative/spree_bootstrap_frontend', branch: '2-1-stable'
+gem 'spree_drop_ship', github: 'jdutil/spree_drop_ship', branch: 'master'
